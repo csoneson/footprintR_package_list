@@ -58,17 +58,24 @@ jobs:
           print(basilisk::listPackages(env = file.path(".", "footprintr-basilisk-env")))
         shell: Rscript {0}
 
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2.2.0
-        with:
-          miniforge-version: "latest"
+      # - name: Setup Miniconda
+      #   uses: conda-incubator/setup-miniconda@v2.2.0
+      #   with:
+      #     miniforge-version: "latest"
 
       - name: List content of environment
-        run: conda list -p ./footprintr-basilisk-env
+        run: python3 -m pip list --format freeze -p ./footprintr-basilisk-env
+
+      # - name: List content of environment in format suitable for pasting into R
+      #   if: runner.os != 'Windows'
+      #   run: |
+      #     conda list -p ./footprintr-basilisk-env | tail -n +4 |\
+      #     tr -s ' ' | cut -f1,2 -d' ' |\
+      #     sed -e 's/ /==/' -e 's/^..*$/"&",/' -e '$ s/.$/)/' -e '1s/^/c(/'
 
       - name: List content of environment in format suitable for pasting into R
         if: runner.os != 'Windows'
         run: |
-          conda list -p ./footprintr-basilisk-env | tail -n +4 |\
-          tr -s ' ' | cut -f1,2 -d' ' |\
+          python3 -m pip list --format freeze -p ./footprintr-basilisk-env | tail -n +1 |\
+          tr -s ' ' | cut -f2 -d' ' |\
           sed -e 's/ /==/' -e 's/^..*$/"&",/' -e '$ s/.$/)/' -e '1s/^/c(/'
