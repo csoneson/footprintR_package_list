@@ -32,7 +32,7 @@ jobs:
         run: |
           python3 -m venv ./footprintr-env
           source ./footprintr-env/bin/activate
-          python3 -m pip install python==3.13.3 ‘tensorflow[and-cuda]’ keras h5py
+          python3 -m pip install python==3.13.3 'tensorflow[and-cuda]' keras h5py
 
       - name: List content of environment
         run: pip3 list ./footprintr-env
