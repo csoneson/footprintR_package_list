@@ -64,7 +64,7 @@ jobs:
       #     miniforge-version: "latest"
 
       - name: List content of environment
-        run: python3 -m pip list --format freeze ./footprintr-basilisk-env
+        run: ./footprintr-basilisk-env/bin/python -m pip list --format freeze
 
       # - name: List content of environment in format suitable for pasting into R
       #   if: runner.os != 'Windows'
@@ -76,6 +76,6 @@ jobs:
       - name: List content of environment in format suitable for pasting into R
         if: runner.os != 'Windows'
         run: |
-          python3 -m pip list --format freeze ./footprintr-basilisk-env | tail -n +1 |\
+          ./footprintr-basilisk-env/bin/python -m pip list --format freeze | tail -n +1 |\
           tr -s ' ' | cut -f2 -d' ' |\
           sed -e 's/ /==/' -e 's/^..*$/"&",/' -e '$ s/.$/)/' -e '1s/^/c(/'
