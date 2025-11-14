@@ -84,7 +84,12 @@ jobs:
         shell: Rscript {0}
 
       - name: List content of environment
+        if: runner.os != 'Windows'
         run: ./footprintr-basilisk-env/bin/python -m pip list --format freeze
+
+      - name: List content of environment
+        if: runner.os == 'Windows'
+        run: footprintr-basilisk-env\Scripts\python -m pip list --format freeze
 
       - name: List content of environment in format suitable for pasting into R
         if: runner.os != 'Windows'
