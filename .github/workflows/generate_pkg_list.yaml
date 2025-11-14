@@ -34,9 +34,9 @@ jobs:
           bioc-version: ${{ matrix.config.bioc }}
 
       - name: Build and test environment
+        if: matrix.config.os != 'macos-15-intel'
         run: |
           BiocManager::install("basilisk")
-          #BiocManager::install(c("basilisk", "basilisk.utils"))
 
           deps <- c(
               "python==3.13.3",
@@ -58,20 +58,33 @@ jobs:
           print(basilisk::listPackages(env = file.path(".", "footprintr-basilisk-env")))
         shell: Rscript {0}
 
-      # - name: Setup Miniconda
-      #   uses: conda-incubator/setup-miniconda@v2.2.0
-      #   with:
-      #     miniforge-version: "latest"
+      - name: Build and test environment
+        if: matrix.config.os == 'macos-15-intel'
+        run: |
+          BiocManager::install("basilisk")
+
+          deps <- c(
+              "python==3.12.10",
+              "tensorflow==2.16.2",
+              "keras==3.11.3",
+              "h5py==3.14.0"
+          )
+
+          basilisk::setupBasiliskEnv(
+            envpath = file.path(".", "footprintr-basilisk-env"),
+            packages = c(deps))
+          res <- basilisk::basiliskRun(
+            env = file.path(".", "footprintr-basilisk-env"),
+            fun = function() {
+                kr <- reticulate::import("keras")
+                kr$`__version__`
+            })
+          print(res)
+          print(basilisk::listPackages(env = file.path(".", "footprintr-basilisk-env")))
+        shell: Rscript {0}
 
       - name: List content of environment
         run: ./footprintr-basilisk-env/bin/python -m pip list --format freeze
-
-      # - name: List content of environment in format suitable for pasting into R
-      #   if: runner.os != 'Windows'
-      #   run: |
-      #     conda list -p ./footprintr-basilisk-env | tail -n +4 |\
-      #     tr -s ' ' | cut -f1,2 -d' ' |\
-      #     sed -e 's/ /==/' -e 's/^..*$/"&",/' -e '$ s/.$/)/' -e '1s/^/c(/'
 
       - name: List content of environment in format suitable for pasting into R
         if: runner.os != 'Windows'
