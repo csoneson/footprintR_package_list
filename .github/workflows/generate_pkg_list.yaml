@@ -1,0 +1,74 @@
+on:
+  push:
+
+name: generate_pkg_list
+
+jobs:
+  generate_pkg_list:
+    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {os: windows-latest, bioc: 'release'}
+        - {os: ubuntu-latest, bioc: 'release'}
+        - {os: macos-latest, bioc: 'release'}
+        - {os: macos-15-intel, bioc: 'release'}
+        - {os: ubuntu-24.04-arm, bioc: 'release'}
+
+    env:
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      _R_CHECK_FORCE_SUGGESTS_: false
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Set up R and install BiocManager
+        uses: grimbough/bioc-actions/setup-bioc@v1
+        with:
+          bioc-version: ${{ matrix.config.bioc }}
+
+      - name: Build and test environment
+        run: |
+          BiocManager::install("basilisk")
+          #BiocManager::install(c("basilisk", "basilisk.utils"))
+
+          deps <- c(
+              "python==3.13.3",
+              "tensorflow==2.19.0",
+              "keras==3.11.3",
+              "h5py==3.14.0"
+          )
+
+          basilisk::setupBasiliskEnv(
+            envpath = file.path(".", "footprintr-basilisk-env"),
+            packages = c(deps))
+          res <- basilisk::basiliskRun(
+            env = file.path(".", "footprintr-basilisk-env"),
+            fun = function() {
+                kr <- reticulate::import("keras")
+                kr$`__version__`
+            })
+          print(res)
+          print(basilisk::listPackages(env = file.path(".", "footprintr-basilisk-env")))
+        shell: Rscript {0}
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2.2.0
+        with:
+          miniforge-version: "latest"
+
+      - name: List content of environment
+        run: conda list -p ./footprintr-basilisk-env
+
+      - name: List content of environment in format suitable for pasting into R
+        if: runner.os != 'Windows'
+        run: |
+          conda list -p ./footprintr-basilisk-env | tail -n +4 |\
+          tr -s ' ' | cut -f1,2 -d' ' |\
+          sed -e 's/ /==/' -e 's/^..*$/"&",/' -e '$ s/.$/)/' -e '1s/^/c(/'

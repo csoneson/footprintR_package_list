@@ -1,5 +1,5 @@
 on:
-  push:
+  workflow_dispatch:
 
 name: generate_pkg_list_pyenv
 
@@ -40,7 +40,7 @@ jobs:
         run: |
           python3 -m venv python==3.13.3 ./footprintr-env
           source ./footprintr-env/bin/activate
-          python3 -m pip install tensorflow keras h5py
+          python3 -m pip install tensorflow==2.19.0 keras h5py
 
       - name: List content of environment
         run: pip3 list ./footprintr-env
